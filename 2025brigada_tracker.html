@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Brigada Donation Tracker 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .auth-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .auth-modal h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .auth-modal input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .auth-modal input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .auth-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            color: #764ba2;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .theme {
+            font-style: italic;
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .intro {
+            text-align: left;
+            color: #666;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-external {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .donations-list {
+            grid-column: span 2;
+        }
+
+        .donation-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .donation-info {
+            flex: 1;
+        }
+
+        .donation-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .ranking-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .medal {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .gold { color: #ffd700; }
+        .silver { color: #c0c0c0; }
+        .bronze { color: #cd7f32; }
+
+        .summary {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard, .ranking-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .donations-list {
+                grid-column: span 1;
+            }
+            
+            .donation-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .header h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Modal -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-modal">
+            <h2>🏫 Access E-Brigada Tracker</h2>
+            <p style="margin-bottom: 20px; color: #666;">Enter password to continue</p>
+            <input type="password" id="passwordInput" placeholder="Enter password" />
+            <br>
+            <button class="auth-btn" onclick="authenticate()">Enter Tracker</button>
+            <div id="errorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Brigada Eskwela 2025: E-Brigada Donation Tracker</h1>
+            <h2>Maria Clara L. Lobregat National High School</h2>
+            <div class="theme">"Sama-sama para sa Bayang Bumabasa"</div>
+            <div class="intro">
+                <p>Brigada Eskwela 2025 at Maria Clara L. Lobregat National High School continues to embody the true spirit of bayanihan as teachers, parents, students, alumni, and community partners unite to prepare our school for the new academic year. This annual initiative goes beyond cleaning and repairing—it strengthens our shared commitment to providing a safe, inclusive, and learner-friendly environment for every student.</p>
+                <p style="margin-top: 15px; font-weight: 600;">"At Maria Clara L. Lobregat NHS, Brigada Eskwela is more than a tradition—it is a shared mission of hope and service."</p>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <!-- Donation Form -->
+            <div class="card">
+                <h3>📝 Add New Donation</h3>
+                <form id="donationForm">
+                    <div class="form-group">
+                        <label>Items/Materials:</label>
+                        <input type="text" id="items" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity:</label>
+                        <input type="number" id="quantity" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Date Received:</label>
+                        <input type="date" id="dateReceived" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Name of Donor:</label>
+                        <input type="text" id="donorName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cost Per Unit (₱):</label>
+                        <input type="number" id="costPerUnit" required min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Cost (₱):</label>
+                        <input type="number" id="totalCost" readonly style="background: #f0f0f0;">
+                    </div>
+                    <div class="form-group">
+                        <label>Department:</label>
+                        <select id="department" required>
+                            <option value="">Select Department</option>
+                            <option value="Filipino">Filipino</option>
+                            <option value="English">English</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Science">Science</option>
+                            <option value="Araling Panlipunan">Araling Panlipunan</option>
+                            <option value="Edukasyon sa Pagpapakatao (EsP)">Edukasyon sa Pagpapakatao (EsP)</option>
+                            <option value="Technology and Livelihood Education (TLE)">Technology and Livelihood Education (TLE)</option>
+                            <option value="SHS">SHS</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-external" onclick="openGoogleForm()">📋 Fill Google Form</button>
+                    <button type="button" class="btn" onclick="addDonation()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🔧 Manual Add</button>
+                </form>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <h3>📊 Quick Statistics</h3>
+                <div style="text-align: center;">
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 36px; font-weight: bold; color: #667eea;" id="totalDonations">0</div>
+                        <div style="color: #666;">Total Donations</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 36px; font-weight: bold; color: #27ae60;" id="totalValue">₱0</div>
+                        <div style="color: #666;">Total Value</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 36px; font-weight: bold; color: #e67e22;" id="totalDonors">0</div>
+                        <div style="color: #666;">Total Donors</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donations List -->
+            <div class="card donations-list">
+                <h3>📋 Donation Records</h3>
+                <div id="donationsList">
+                    <p style="text-align: center; color: #666; padding: 40px;">No donations recorded yet. Add your first donation above!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rankings -->
+        <div class="ranking-section">
+            <div class="card">
+                <h3>🏆 Top Departments</h3>
+                <div id="departmentRankings">
+                    <p style="text-align: center; color: #666; padding: 20px;">No data available yet</p>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🌟 Top Donors</h3>
+                <div id="donorRankings">
+                    <p style="text-align: center; color: #666; padding: 20px;">No data available yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary">
+            <h3 style="color: #667eea; margin-bottom: 20px; font-size: 24px;">📈 Detailed Summary</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="summaryItems">0</div>
+                    <div>Items Donated</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="summaryQuantity">0</div>
+                    <div>Total Quantity</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="summaryDepartments">0</div>
+                    <div>Departments Served</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="summaryAvgValue">₱0</div>
+                    <div>Average Donation Value</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Created by Cher Marjoe</p>
+    </div>
+
+    <script>
+        // Authentication
+        function authenticate() {
+            const password = document.getElementById('passwordInput').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (password === 'MCLLBRIGADA2025') {
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                loadData();
+            } else {
+                errorMsg.textContent = 'Incorrect password. Please try again.';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        // Enter key authentication
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                authenticate();
+            }
+        });
+
+        // Data storage
+        let donations = [];
+
+        // Auto-calculate total cost
+        document.getElementById('quantity').addEventListener('input', calculateTotal);
+        document.getElementById('costPerUnit').addEventListener('input', calculateTotal);
+
+        function calculateTotal() {
+            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+            const costPerUnit = parseFloat(document.getElementById('costPerUnit').value) || 0;
+            const total = quantity * costPerUnit;
+            document.getElementById('totalCost').value = total.toFixed(2);
+        }
+
+        // Manual Add Donation Function
+        function addDonation() {
+            console.log('Manual Add button clicked');
+            
+            // Get form values
+            const items = document.getElementById('items').value.trim();
+            const quantity = document.getElementById('quantity').value;
+            const dateReceived = document.getElementById('dateReceived').value;
+            const donorName = document.getElementById('donorName').value.trim();
+            const costPerUnit = document.getElementById('costPerUnit').value;
+            const totalCost = document.getElementById('totalCost').value;
+            const department = document.getElementById('department').value;
+            
+            console.log('Form data:', { items, quantity, dateReceived, donorName, costPerUnit, totalCost, department });
+            
+            // Validate required fields
+            if (!items) {
+                alert('❌ Please enter Items/Materials!');
+                document.getElementById('items').focus();
+                return;
+            }
+            if (!quantity || quantity <= 0) {
+                alert('❌ Please enter a valid Quantity!');
+                document.getElementById('quantity').focus();
+                return;
+            }
+            if (!dateReceived) {
+                alert('❌ Please select Date Received!');
+                document.getElementById('dateReceived').focus();
+                return;
+            }
+            if (!donorName) {
+                alert('❌ Please enter Donor Name!');
+                document.getElementById('donorName').focus();
+                return;
+            }
+            if (!costPerUnit || costPerUnit < 0) {
+                alert('❌ Please enter a valid Cost Per Unit!');
+                document.getElementById('costPerUnit').focus();
+                return;
+            }
+            if (!department) {
+                alert('❌ Please select a Department!');
+                document.getElementById('department').focus();
+                return;
+            }
+            
+            // Create donation object
+            const donation = {
+                id: Date.now() + Math.random(), // Ensure unique ID
+                items: items,
+                quantity: parseInt(quantity),
+                dateReceived: dateReceived,
+                donorName: donorName,
+                department: department,
+                costPerUnit: parseFloat(costPerUnit),
+                totalCost: parseFloat(totalCost) || (parseInt(quantity) * parseFloat(costPerUnit))
+            };
+            
+            console.log('Created donation object:', donation);
+            
+            // Add to donations array
+            donations.push(donation);
+            console.log('Total donations after add:', donations.length);
+            
+            // Update all displays
+            updateDisplay();
+            
+            // Show success message
+            alert('✅ Donation added successfully to the tracker!\n\n' + 
+                  `Items: ${donation.items}\n` +
+                  `Quantity: ${donation.quantity}\n` +
+                  `Donor: ${donation.donorName}\n` +
+                  `Department: ${donation.department}\n` +
+                  `Total Cost: ₱${donation.totalCost.toLocaleString()}`);
+            
+            // Clear the form
+            clearForm();
+        }
+        
+        // Clear form function
+        function clearForm() {
+            document.getElementById('items').value = '';
+            document.getElementById('quantity').value = '';
+            document.getElementById('donorName').value = '';
+            document.getElementById('costPerUnit').value = '';
+            document.getElementById('totalCost').value = '';
+            document.getElementById('department').value = '';
+            // Keep today's date
+            document.getElementById('dateReceived').value = new Date().toISOString().split('T')[0];
+        }
+
+        // Form submission event (removed since no submit button)
+        // Keeping only the Google Form functionality
+
+        // Google Form integration with prefilled data
+        function openGoogleForm() {
+            // Get current form data
+            const items = document.getElementById('items').value.trim();
+            const quantity = document.getElementById('quantity').value;
+            const dateReceived = document.getElementById('dateReceived').value;
+            const donorName = document.getElementById('donorName').value.trim();
+            const department = document.getElementById('department').value;
+            const costPerUnit = document.getElementById('costPerUnit').value;
+            const totalCost = document.getElementById('totalCost').value;
+            
+            // Check if form has data
+            if (!items && !quantity && !donorName && !department) {
+                alert('⚠️ Please fill in some form data first to prefill the Google Form!');
+                return;
+            }
+            
+            // Base Google Form URL
+            let formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScClQ5gmlz60wYcQCMdZHt0qazPFf3fgGXNBanCuRO70Sau2Q/viewform?usp=pp_url';
+            
+            // Add prefilled data
+            if (items) {
+                formUrl += `&entry.1468451840=${encodeURIComponent(items)}`;
+            }
+            if (quantity) {
+                formUrl += `&entry.1800568494=${encodeURIComponent(quantity)}`;
+            }
+            if (dateReceived) {
+                formUrl += `&entry.1038805688=${encodeURIComponent(dateReceived)}`;
+            }
+            if (donorName) {
+                formUrl += `&entry.311281131=${encodeURIComponent(donorName)}`;
+            }
+            if (costPerUnit) {
+                formUrl += `&entry.865164609=${encodeURIComponent(costPerUnit)}`;
+            }
+            if (totalCost) {
+                formUrl += `&entry.214162758=${encodeURIComponent(totalCost)}`;
+            }
+            if (department) {
+                formUrl += `&entry.1934966814=${encodeURIComponent(department)}`;
+            }
+            
+            console.log('Opening Google Form with prefilled data:', {
+                items, quantity, dateReceived, donorName, department, costPerUnit, totalCost
+            });
+            
+            // Open the form in a new tab
+            window.open(formUrl, '_blank');
+            
+            // Show confirmation
+            alert('🔗 Google Form opened with your data prefilled! Please complete and submit the form.');
+        }
+
+        // Delete donation
+        function deleteDonation(id) {
+            if (confirm('Are you sure you want to delete this donation?')) {
+                donations = donations.filter(d => d.id !== id);
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+            updateQuickStats();
+            updateDonationsList();
+            updateRankings();
+            updateSummary();
+        }
+
+        function updateQuickStats() {
+            const totalDonations = donations.length;
+            const totalValue = donations.reduce((sum, d) => sum + d.totalCost, 0);
+            const uniqueDonors = [...new Set(donations.map(d => d.donorName))].length;
+            
+            document.getElementById('totalDonations').textContent = totalDonations;
+            document.getElementById('totalValue').textContent = `₱${totalValue.toLocaleString()}`;
+            document.getElementById('totalDonors').textContent = uniqueDonors;
+        }
+
+        function updateDonationsList() {
+            const container = document.getElementById('donationsList');
+            
+            if (donations.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No donations recorded yet. Add your first donation above!</p>';
+                return;
+            }
+            
+            const sortedDonations = [...donations].sort((a, b) => new Date(b.dateReceived) - new Date(a.dateReceived));
+            
+            container.innerHTML = sortedDonations.map(d => `
+                <div class="donation-item">
+                    <div class="donation-info">
+                        <strong>${d.items}</strong> (${d.quantity} units)
+                        <div class="donation-meta">
+                            👤 ${d.donorName} | 🏫 ${d.department} | 📅 ${new Date(d.dateReceived).toLocaleDateString()} | 💰 ₱${d.totalCost.toLocaleString()}
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteDonation(${d.id})">🗑️ Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function updateRankings() {
+            // Department rankings
+            const deptTotals = {};
+            donations.forEach(d => {
+                deptTotals[d.department] = (deptTotals[d.department] || 0) + d.totalCost;
+            });
+            
+            const sortedDepts = Object.entries(deptTotals)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            const deptContainer = document.getElementById('departmentRankings');
+            if (sortedDepts.length === 0) {
+                deptContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No data available yet</p>';
+            } else {
+                deptContainer.innerHTML = sortedDepts.map(([dept, total], index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = medals[index] || '🏅';
+                    return `
+                        <div class="ranking-item">
+                            <div style="display: flex; align-items: center;">
+                                <span class="medal">${medal}</span>
+                                <strong>${dept}</strong>
+                            </div>
+                            <span style="color: #27ae60; font-weight: bold;">₱${total.toLocaleString()}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Donor rankings
+            const donorTotals = {};
+            donations.forEach(d => {
+                donorTotals[d.donorName] = (donorTotals[d.donorName] || 0) + d.totalCost;
+            });
+            
+            const sortedDonors = Object.entries(donorTotals)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            const donorContainer = document.getElementById('donorRankings');
+            if (sortedDonors.length === 0) {
+                donorContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No data available yet</p>';
+            } else {
+                donorContainer.innerHTML = sortedDonors.map(([donor, total], index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = medals[index] || '🏅';
+                    return `
+                        <div class="ranking-item">
+                            <div style="display: flex; align-items: center;">
+                                <span class="medal">${medal}</span>
+                                <strong>${donor}</strong>
+                            </div>
+                            <span style="color: #27ae60; font-weight: bold;">₱${total.toLocaleString()}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function updateSummary() {
+            const totalItems = donations.length;
+            const totalQuantity = donations.reduce((sum, d) => sum + d.quantity, 0);
+            const uniqueDepartments = [...new Set(donations.map(d => d.department))].length;
+            const totalValue = donations.reduce((sum, d) => sum + d.totalCost, 0);
+            const avgValue = totalItems > 0 ? totalValue / totalItems : 0;
+            
+            document.getElementById('summaryItems').textContent = totalItems;
+            document.getElementById('summaryQuantity').textContent = totalQuantity.toLocaleString();
+            document.getElementById('summaryDepartments').textContent = uniqueDepartments;
+            document.getElementById('summaryAvgValue').textContent = `₱${avgValue.toLocaleString()}`;
+        }
+
+        // Data persistence (using variables since localStorage is not available)
+        function saveData() {
+            // Data is automatically saved in the donations array
+            console.log('Data saved:', donations.length, 'donations');
+        }
+
+        function loadData() {
+            // Initialize with empty array
+            donations = [];
+            updateDisplay();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default
+            document.getElementById('dateReceived').value = new Date().toISOString().split('T')[0];
+            
+            // Add event listeners for auto-calculation
+            document.getElementById('quantity').addEventListener('input', calculateTotal);
+            document.getElementById('costPerUnit').addEventListener('input', calculateTotal);
+            
+            console.log('Page initialized');
+        });
+    </script>
+</body>
+</html>
